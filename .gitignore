@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE
+.idea/
+.vscode/
+
+# Claude local settings
+.claude/settings.local.json
+
+# OS
+.DS_Store
+
+# Experiment outputs / model checkpoints
+*.pt
+*.bin
+*.ckpt
+runs/
+outputs/
+checkpoints/
+wandb/
