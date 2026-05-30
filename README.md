@@ -57,6 +57,37 @@ python run_experiment.py --task mrpc
 python run_experiment.py --task sst2 --glove_path glove.6B.100d.txt
 ```
 
+### Run on a fraction of the training data (compute-limited)
+`--subset <fraction>` applies to both the teacher fine-tuning data and the distillation data.
+```bash
+python run_experiment.py --task sst2 --subset 0.3        # 30% of train set
+python run_experiment.py --task sst2 --subset 0.05 --fast  # smoke test
+```
+
+### Available tasks
+`sst2`, `mrpc`, `qqp`, `qnli`, `rte`, `cola`, `stsb`, `mnli` — defined in [`tinybert/glue_utils.py`](tinybert/glue_utils.py) with the metric for each (accuracy / F1 / Matthews corr. / Pearson).
+
+---
+
+## Output artifacts
+
+Every run writes to `checkpoints/<task>/`:
+
+```
+checkpoints/<task>/
+  teacher/          — fine-tuned BERT-base teacher (HuggingFace save_pretrained format)
+  student/          — distilled TinyBERT₄ student (same format)
+  results.json      — { "task": ..., "teacher": {metric: value}, "student": {metric: value} }
+```
+
+To re-evaluate a saved student without retraining:
+```python
+from tinybert.teacher import load_and_evaluate
+print(load_and_evaluate("checkpoints/sst2/student", task="sst2"))
+```
+
+If a teacher already exists at `checkpoints/<task>/teacher/`, the pipeline detects this and skips teacher fine-tuning — useful when iterating on the distillation phase.
+
 ---
 
 ## Project structure
