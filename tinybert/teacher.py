@@ -35,6 +35,7 @@ class TeacherConfig:
     warmup_ratio: float = 0.1
     weight_decay: float = 0.01
     seed: int = 42
+    subset: Optional[float] = None
 
 
 def train_teacher(cfg: TeacherConfig):
@@ -50,7 +51,13 @@ def train_teacher(cfg: TeacherConfig):
     raw = load_dataset("glue", cfg.task)
 
     tokenizer = AutoTokenizer.from_pretrained(cfg.model_name)
-    train_ds = preprocess_dataset(raw["train"], tokenizer, task_cfg, cfg.max_seq_len)
+    train_split = raw["train"]
+    if cfg.subset is not None and cfg.subset < 1.0:
+        n = max(1, int(len(train_split) * cfg.subset))
+        train_split = train_split.shuffle(seed=cfg.seed).select(range(n))
+        print(f"  Teacher using {len(train_split)}/{len(raw['train'])} training examples "
+              f"({cfg.subset*100:.0f}% subset)", flush=True)
+    train_ds = preprocess_dataset(train_split, tokenizer, task_cfg, cfg.max_seq_len)
     val_ds = preprocess_dataset(raw["validation"], tokenizer, task_cfg, cfg.max_seq_len)
 
     train_loader = DataLoader(train_ds, batch_size=cfg.batch_size, shuffle=True)

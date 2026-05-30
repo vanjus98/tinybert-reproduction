@@ -75,6 +75,7 @@ def main():
             output_dir=teacher_dir,
             num_epochs=2 if args.fast else 3,
             seed=args.seed,
+            subset=args.subset,
         )
         teacher_dir = train_teacher(t_cfg)
     else:
