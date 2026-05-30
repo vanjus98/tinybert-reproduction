@@ -19,6 +19,7 @@ import os
 
 import torch
 from datasets import load_dataset
+from tqdm.auto import tqdm
 from transformers import AutoTokenizer
 
 from tinybert.glue_utils import TASK_CONFIG, preprocess_dataset, compute_metrics
@@ -120,16 +121,17 @@ def main():
         orig_sentences = train_split[key1]
         orig_labels = train_split["label"]
 
-        print(f"  Augmenting {len(orig_sentences)} training examples ...")
+        print(f"  Augmenting {len(orig_sentences)} training examples ...", flush=True)
         aug_sentences, aug_labels = [], []
-        for sent, lbl in zip(orig_sentences, orig_labels):
+        for sent, lbl in tqdm(list(zip(orig_sentences, orig_labels)),
+                              desc="Augmenting", unit="sent"):
             aug_sentences.append(sent)
             aug_labels.append(lbl)
             for aug in augmenter.augment(sent):
                 aug_sentences.append(aug)
                 aug_labels.append(lbl)
 
-        print(f"  Augmented dataset size: {len(aug_sentences)} (was {len(orig_sentences)})")
+        print(f"  Augmented dataset size: {len(aug_sentences)} (was {len(orig_sentences)})", flush=True)
 
         if key2 is None:
             from transformers import AutoTokenizer as _T

@@ -19,6 +19,7 @@ from typing import Optional
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
+from tqdm.auto import tqdm
 from transformers import (
     AutoModelForSequenceClassification,
     AutoTokenizer,
@@ -226,7 +227,8 @@ class TinyBERTDistiller:
         for epoch in range(num_epochs):
             self.student.train()
             total_loss = 0.0
-            for batch in loader:
+            pbar = tqdm(loader, desc=f"[{desc}] epoch {epoch+1}/{num_epochs}", leave=False)
+            for step, batch in enumerate(pbar, start=1):
                 batch = {k: v.to(self.device) for k, v in batch.items()}
                 loss = loss_fn(batch)
                 loss.backward()
@@ -237,7 +239,8 @@ class TinyBERTDistiller:
                 scheduler.step()
                 optimizer.zero_grad()
                 total_loss += loss.item()
-            print(f"  [{desc}] Epoch {epoch+1}/{num_epochs}  loss={total_loss/len(loader):.4f}")
+                pbar.set_postfix(loss=f"{total_loss/step:.4f}", lr=f"{scheduler.get_last_lr()[0]:.2e}")
+            print(f"  [{desc}] Epoch {epoch+1}/{num_epochs}  loss={total_loss/len(loader):.4f}", flush=True)
 
     # ─────────────────────────────────────────────────────────────────────────
     def distill(self, train_dataset, val_dataset):
@@ -277,7 +280,7 @@ class TinyBERTDistiller:
         self.student.eval()
         all_preds, all_labels = [], []
         with torch.no_grad():
-            for batch in loader:
+            for batch in tqdm(loader, desc="Validation", leave=False):
                 batch = {k: v.to(self.device) for k, v in batch.items()}
                 labels = batch["labels"]
                 out = self.student(

@@ -11,6 +11,7 @@ from typing import Optional
 
 import torch
 from torch.utils.data import DataLoader
+from tqdm.auto import tqdm
 from transformers import (
     AutoModelForSequenceClassification,
     AutoTokenizer,
@@ -69,7 +70,8 @@ def train_teacher(cfg: TeacherConfig):
     for epoch in range(cfg.num_epochs):
         model.train()
         total_loss = 0.0
-        for batch in train_loader:
+        pbar = tqdm(train_loader, desc=f"Teacher epoch {epoch+1}/{cfg.num_epochs}", leave=False)
+        for step, batch in enumerate(pbar, start=1):
             batch = {k: v.to(device) for k, v in batch.items()}
             outputs = model(**batch)
             loss = outputs.loss
@@ -79,10 +81,11 @@ def train_teacher(cfg: TeacherConfig):
             scheduler.step()
             optimizer.zero_grad()
             total_loss += loss.item()
+            pbar.set_postfix(loss=f"{total_loss/step:.4f}", lr=f"{scheduler.get_last_lr()[0]:.2e}")
 
         avg_loss = total_loss / len(train_loader)
         metrics = evaluate_model(model, val_loader, device, task_cfg)
-        print(f"Epoch {epoch+1}/{cfg.num_epochs}  loss={avg_loss:.4f}  {metrics}")
+        print(f"Epoch {epoch+1}/{cfg.num_epochs}  loss={avg_loss:.4f}  {metrics}", flush=True)
 
         score = list(metrics.values())[0]
         if score > best_metric:
