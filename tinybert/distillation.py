@@ -42,17 +42,24 @@ def _register_raw_attention_hooks(model) -> list:
     The hook re-derives Q,K from the layer's `query`/`key` projections and
     writes the scores to `module._raw_attn` as a side effect. Returns the
     handles so callers can remove them if needed.
+
+    Note: transformers >=4.49 removed BertSelfAttention.transpose_for_scores
+    when BERT was refactored onto the SDPA attention dispatcher. We reshape
+    Q/K manually using `num_attention_heads` and `attention_head_size`, which
+    are still set in __init__.
     """
     handles = []
     encoder = model.bert.encoder if hasattr(model, "bert") else model.base_model.encoder
 
     def make_hook(self_attn):
         head_dim = self_attn.attention_head_size
+        num_heads = self_attn.num_attention_heads
 
         def hook(module, inputs, output):
             hidden = inputs[0]
-            q = module.transpose_for_scores(module.query(hidden))
-            k = module.transpose_for_scores(module.key(hidden))
+            new_shape = hidden.size()[:-1] + (num_heads, head_dim)
+            q = module.query(hidden).view(new_shape).permute(0, 2, 1, 3)
+            k = module.key(hidden).view(new_shape).permute(0, 2, 1, 3)
             module._raw_attn = (q @ k.transpose(-1, -2)) / math.sqrt(head_dim)
         return hook
 
