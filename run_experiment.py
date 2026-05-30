@@ -85,7 +85,7 @@ def main():
     print(f"\n{'='*60}")
     print(f"Step 2: Loading GLUE/{task} dataset")
     print(f"{'='*60}")
-    raw = load_dataset("glue", task)
+    raw = load_dataset("nyu-mll/glue", task)
     tokenizer = AutoTokenizer.from_pretrained(teacher_dir)
 
     max_seq = 64 if task_cfg["sentence_keys"][1] is None else 128

@@ -48,7 +48,7 @@ def train_teacher(cfg: TeacherConfig):
     print(f"Device: {device}")
 
     task_cfg = TASK_CONFIG[cfg.task]
-    raw = load_dataset("glue", cfg.task)
+    raw = load_dataset("nyu-mll/glue", cfg.task)
 
     tokenizer = AutoTokenizer.from_pretrained(cfg.model_name)
     train_split = raw["train"]
@@ -127,7 +127,7 @@ def load_and_evaluate(model_dir: str, task: str, max_seq_len: int = 128) -> dict
     from .glue_utils import TASK_CONFIG, preprocess_dataset
 
     task_cfg = TASK_CONFIG[task]
-    raw = load_dataset("glue", task)
+    raw = load_dataset("nyu-mll/glue", task)
     tokenizer = AutoTokenizer.from_pretrained(model_dir)
     val_ds = preprocess_dataset(raw["validation"], tokenizer, task_cfg, max_seq_len)
     val_loader = DataLoader(val_ds, batch_size=32)
