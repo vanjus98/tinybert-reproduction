@@ -105,7 +105,24 @@ run_experiment.py   — End-to-end pipeline
 
 ---
 
-## Key results (TinyBERT4 vs BERT-base, from paper Table 1)
+## Our reproduced results
+
+Distilled on Colab (single GPU). **SST-2** was distilled on a **20% subset** of the
+training set due to compute limits; **MRPC** used the **full** training set. Metrics:
+SST-2 = accuracy, MRPC = F1 (GLUE dev set).
+
+| Task | Metric | BERT-base (teacher) | TinyBERT4 (student) | Retention |
+|------|--------|--------------------:|--------------------:|----------:|
+| SST-2 | accuracy | 92.9 | 90.6 | 97.5% |
+| MRPC  | F1       | 88.0 | 88.3 | ~100% |
+
+The 4-layer student retains **~97–100%** of the BERT-base teacher's performance at ~13%
+of the parameters, reproducing TinyBERT's central claim. On MRPC the student matches the
+teacher within dev-set noise (408 examples). The small SST-2 gap vs. the paper's 92.6 is
+attributable to the 20% distillation subset and to skipping general distillation (we
+initialise from the released general TinyBERT checkpoint).
+
+## Paper reference results (TinyBERT4 vs BERT-base, Table 1)
 
 | Model | SST-2 | MRPC | Params | Speedup |
 |-------|-------|------|--------|---------|
