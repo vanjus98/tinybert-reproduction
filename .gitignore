@@ -14,9 +14,6 @@ env/
 .idea/
 .vscode/
 
-# Claude local settings
-.claude/settings.local.json
-
 # OS
 .DS_Store
 
